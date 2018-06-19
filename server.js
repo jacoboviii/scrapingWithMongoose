@@ -61,10 +61,12 @@ mongoose.connect("mongodb://localhost/scrapingMongo");
 app.get('/', function (req, res) {
     // TODO: Finish the route so it grabs all of the articles
     db.Article.find({})
+        .populate("comments")
         .then(function (dbArticles) {
             const hsbObject = {
                 articles: dbArticles
             }
+            // res.json(hsbObject);
             // console.log(hsbObject);
             res.render('index', hsbObject);
         })
@@ -116,7 +118,58 @@ app.get("/scrape", function (req, res) {
     });
 });
 
+app.post("/articles/:id", function(req, res) {
+    // TODO
+    // ====
+    // save the new comment that gets posted to the comments collection
+    // then find an article from the req.params.id
+    // and update it's "comment" property with the _id of the new comment
+    db.Comment.create(req.body)
+    .then(function(dbComment){
+      return db.Article.findOneAndUpdate({_id : req.params.id}, {$push: {comments: dbComment._id}}, {new : true});
+      })
+    .then(function(){
+        req.session.sessionFlash = {
+            type: 'success',
+            message: 'Comment Added.'
+        }
+        res.redirect("/");
+    })
+    .catch(function(err) {
+      // If an error occurs, send the error back to the client
+      console.log(err);
+    });
+  });
 
+// Delete request to delete a single comment
+app.delete("/comments/:id", function(req, res){
+    db.Comment.remove({ _id: req.params.id})
+    .then(function(){
+        req.session.sessionFlash = {
+            type: 'success',
+            message: 'Comment Deleted.'
+        }
+        res.send('/')
+    })
+    .catch(function(err){
+        console.log(err)
+    });
+});
+
+// Delete request to delete a single articles
+app.delete("/articles/:id", function(req, res){
+    db.Article.remove({ _id: req.params.id})
+    .then(function(){
+        req.session.sessionFlash = {
+            type: 'success',
+            message: 'Article Deleted.'
+        }
+        res.send('/')
+    })
+    .catch(function(err){
+        console.log(err)
+    });
+});
 
 // Start the server
 app.listen(PORT, function () {
