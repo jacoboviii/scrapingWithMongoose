@@ -53,9 +53,13 @@ app.use(function(req, res, next){
     next();
 });
   
+// If deployed, use the deployed database. Otherwise use the local mongoHeadlines database
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/scrapingMongo";
 
+// Set mongoose to leverage built in JavaScript ES6 Promises
 // Connect to the Mongo DB
-mongoose.connect("mongodb://localhost/scrapingMongo");
+mongoose.Promise = Promise;
+mongoose.connect(MONGODB_URI);
 
 // Routes
 app.get('/', function (req, res) {
@@ -141,7 +145,7 @@ app.post("/articles/:id", function(req, res) {
     });
   });
 
-// Delete request to delete a single comment
+// Delete route to delete a single comment
 app.delete("/comments/:id", function(req, res){
     db.Comment.remove({ _id: req.params.id})
     .then(function(){
@@ -156,7 +160,7 @@ app.delete("/comments/:id", function(req, res){
     });
 });
 
-// Delete request to delete a single articles
+// Delete route to delete a single articles
 app.delete("/articles/:id", function(req, res){
     db.Article.remove({ _id: req.params.id})
     .then(function(){
