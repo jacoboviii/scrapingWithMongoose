@@ -2,7 +2,8 @@ $(document).ready(function(){
     // Delete comment request
     $('.delete-comment').on('click', function(e){
         e.preventDefault(); // Stop the form from causing a page refresh.
-        const id = $('.delete-comment').attr('data-id');
+        $target = $(e.target);
+        const id = $target.attr('data-id');
         $.ajax({
             type: 'DELETE',
             url: '/comments/'+id,
@@ -19,7 +20,8 @@ $(document).ready(function(){
     // Delete articles request
     $('.delete-article').on('click', function(e){
         e.preventDefault(); // Stop the form from causing a page refresh.
-        const id = $('.delete-article').attr('data-id');
+        $target = $(e.target);
+        const id = $target.attr('data-id');
         $.ajax({
             type: 'DELETE',
             url: '/articles/'+id,

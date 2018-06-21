@@ -5,25 +5,17 @@ const mongoose = require("mongoose");
 const exphbs = require("express-handlebars");
 const session = require("express-session");
 const flash = require('connect-flash');
-
-// Our scraping tools
-// Axios is a promised-based http library, similar to jQuery's Ajax method
-// It works on the client and on the server
-const axios = require("axios");
-const cheerio = require("cheerio");
-
-// Require all models
-const db = require("./models");
-
 const PORT = process.env.PORT || 3000;
 
 // Initialize Express
 const app = express();
 
+// Require all models
+const db = require("./models");
+
 // Configure middleware
 app.engine('handlebars', exphbs({ defaultLayout: 'main' }));
 app.set('view engine', 'handlebars');
-
 
 // Use morgan logger for logging requests
 app.use(logger("dev"));
@@ -61,7 +53,7 @@ const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/scrapingMong
 mongoose.Promise = Promise;
 mongoose.connect(MONGODB_URI);
 
-// Routes
+// Home route
 app.get('/', function (req, res) {
     // TODO: Finish the route so it grabs all of the articles
     db.Article.find({})
@@ -80,100 +72,14 @@ app.get('/', function (req, res) {
         });
 });
 
-// A GET route for scraping the echoJS website
-app.get("/scrape", function (req, res) {
-    // First, we grab the body of the html with request
-    axios.get("http://www.echojs.com/").then(function (response) {
-        // Then, we load that into cheerio and save it to $ for a shorthand selector
-        const $ = cheerio.load(response.data);
 
-        // Now, we grab every h2 within an article tag, and do the following:
-        $("article h2").each(function (i, element) {
-            // Save an empty result object
-            const result = {};
-
-            // Add the text and href of every link, and save them as properties of the result object
-            result.title = $(this)
-                .children("a")
-                .text();
-            result.link = $(this)
-                .children("a")
-                .attr("href");
-
-              // Create a new Article using the `result` object built from scraping
-              db.Article.create(result)
-                .then(function(dbArticle) {
-                  // View the added result in the console
-                  console.log(dbArticle);
-                })
-                .catch(function(err) {
-                  // If an error occurred, send it to the client
-                  console.log(err);
-                });
-
-        });
-
-        // If we were able to successfully scrape and save an Article, send a message to the client
-        req.session.sessionFlash = {
-            type: 'success',
-            message: 'Scrape Successfully Completed.'
-        }
-        res.redirect("/");
-    });
-});
-
-app.post("/articles/:id", function(req, res) {
-    // TODO
-    // ====
-    // save the new comment that gets posted to the comments collection
-    // then find an article from the req.params.id
-    // and update it's "comment" property with the _id of the new comment
-    db.Comment.create(req.body)
-    .then(function(dbComment){
-      return db.Article.findOneAndUpdate({_id : req.params.id}, {$push: {comments: dbComment._id}}, {new : true});
-      })
-    .then(function(){
-        req.session.sessionFlash = {
-            type: 'success',
-            message: 'Comment Added.'
-        }
-        res.redirect("/");
-    })
-    .catch(function(err) {
-      // If an error occurs, send the error back to the client
-      console.log(err);
-    });
-  });
-
-// Delete route to delete a single comment
-app.delete("/comments/:id", function(req, res){
-    db.Comment.remove({ _id: req.params.id})
-    .then(function(){
-        req.session.sessionFlash = {
-            type: 'success',
-            message: 'Comment Deleted.'
-        }
-        res.send('/')
-    })
-    .catch(function(err){
-        console.log(err)
-    });
-});
-
-// Delete route to delete a single articles
-app.delete("/articles/:id", function(req, res){
-    db.Article.remove({ _id: req.params.id})
-    .then(function(){
-        req.session.sessionFlash = {
-            type: 'success',
-            message: 'Article Deleted.'
-        }
-        res.send('/')
-    })
-    .catch(function(err){
-        console.log(err)
-    });
-});
+// Route files
+let scrape = require('./routes/scrape');
+let articles = require('./routes/articles');
+let comments = require('./routes/comments');
+app.use(scrape);
+app.use(articles);
+app.use(comments);
 
 // Start the server
 app.listen(PORT, function () {

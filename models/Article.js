@@ -6,6 +6,11 @@ const Schema = mongoose.Schema;
 // Using the Schema constructor, create a new UserSchema object
 // This is similar to a Sequelize model
 const ArticleSchema = new Schema({
+  
+  // 'image' is of type string
+  image: {
+    type: String
+  },
   // `title` is required and of type String
   // We do not allow duplicate articles with same title
   title: {
