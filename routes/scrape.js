@@ -7,6 +7,9 @@ const router = express.Router();
 const axios = require("axios");
 const cheerio = require("cheerio");
 
+// Require all models
+const db = require("../models");
+
 // A GET route for scraping the elpais website
 router.get("/scrape", function (req, res) {
     // First, we grab the body of the html with request
@@ -43,15 +46,15 @@ router.get("/scrape", function (req, res) {
             }
 
             // Create a new Article using the `result` object built from scraping
-            // db.Article.create(result)
-            // .then(function(dbArticle) {
-            //     // View the added result in the console
-            //     console.log(dbArticle);
-            // })
-            // .catch(function(err) {
-            //     // If an error occurred, send it to the client
-            //     console.log(err);
-            // });
+            db.Article.create(result)
+            .then(function(dbArticle) {
+                // View the added result in the console
+                console.log(dbArticle);
+            })
+            .catch(function(err) {
+                // If an error occurred, send it to the client
+                console.log(err);
+            });
         });
 
         // If we were able to successfully scrape and save an Article, send a message to the client
